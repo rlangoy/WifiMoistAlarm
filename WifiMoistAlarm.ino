@@ -44,7 +44,7 @@ const char *OTAName = "MoistureSens";           // A name and a password for the
 const char *OTAPassword = "esp8266";
 
 
-const char* mdnsName = "esp8266"; // Domain name for the mDNS responder
+const char* mdnsName = "MoistAlarm"; // Domain name for the mDNS responder
 
 uint8_t socketNumber;
 
@@ -92,15 +92,34 @@ int m_moistVal=512;
 int m_oldAd0=-1;
 int hue = 0;
 
+int m_adcIntVal=0;
+int m_adcIndex=0;
+int m_adcCurVal=0;
+
+//Return avg of 20 samples
+int smoothedADC()
+{
+     m_adcIntVal+=analogRead(A0);
+     m_adcIndex++;
+     if(m_adcIndex == 20)
+     {
+       m_adcCurVal=m_adcIntVal/(20);
+       m_adcIndex=0;
+       m_adcIntVal=0;
+     }
+
+     
+      return m_adcCurVal;
+}
+
 void loop() {
   webSocket.loop();                           // constantly check for websocket events
   iotWebConf.doLoop();                        // Update
   server.handleClient();                      // run the server
   ArduinoOTA.handle();                        // listen for OTA events
 
-  delay(5);
-  int  moistVal=analogRead(A0);
-  
+  delay(9);    //  wait 9ms
+  int  moistVal=smoothedADC(); 
   if( m_oldAd0!=moistVal )
   { m_oldAd0=moistVal; 
     setSliderValue(moistVal);
@@ -208,8 +227,6 @@ void handleNotFound(){ // if the requested file or page doesn't exist, return a 
 
 bool handleFileRead(String path) { // send the right file to the client (if it exists)
   Serial.println("handleFileRead: " + path);
-  if( (path.equals("/"))  && (iotWebConf.handleCaptivePortal() )) return true;    // -- Captive portal request were already served.
-    
   
   if (path.endsWith("/")) path += "index.html";          // If a folder is requested, send the index file
   String contentType = getContentType(path);             // Get the MIME type
@@ -268,7 +285,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
       }
       break;
     case WStype_TEXT:                     // if new text data is received
-      Serial.printf("[%u] get Text: %s\n", num, payload);
+      //Serial.printf("[%u] get Text: %s\n", num, payload);
       if (payload[0] == '#') {            // we get RGB data
         uint32_t rgb = (uint32_t) strtol((const char *) &payload[1], NULL, 16);   // decode rgb data
         int r = ((rgb >> 20) & 0x3FF);                     // 10 bits per color, so R: bits 20-29
@@ -285,7 +302,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         }
         else if (payload[0] == 'M') {                      // the browser sends an N when the rainbow effect is disabled
            m_moistVal = (uint32_t) strtol((const char *) &payload[1], NULL, 10);   // moisturevalue; }
-           Serial.printf("New moist: %d\n", m_moistVal);
+           //Serial.printf("New moist: %d\n", m_moistVal);
         }
       break;
   }
