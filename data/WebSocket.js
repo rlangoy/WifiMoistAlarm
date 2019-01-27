@@ -3,7 +3,9 @@ var connection = new WebSocket('ws://'+location.hostname+':81/', ['arduino']);
 connection.onopen = function () {
     connection.send('Connect ' + new Date());
 
-    //Debug
+    connection.send("I123"); // Send Msg to recieve GUI update
+
+    //Debugonnection.send(rgbstr);
     //document.getElementById("Slider1TextVal").style = "background-color:lightgreen";
 };
 
@@ -15,10 +17,17 @@ connection.onmessage = function (e) {
     console.log('Server: ', e.data);
 
     //  obj = '{"A0":"0"}'   // Expected input string
-    var obj = JSON.parse(e.data);      
-    document.getElementById('Slider1').value = obj.A0;
-    document.getElementById("Slider1TextVal").innerHTML  = obj.A0;  // Show value
-
+    var obj = JSON.parse(e.data); 
+    if(obj.hasOwnProperty('A0')){
+       document.getElementById('Slider1').value = obj.A0;
+       document.getElementById("Slider1TextVal").innerHTML  = obj.A0;  // Show value
+    }     
+ 
+   if(obj.hasOwnProperty('MoistAlarmValue')){
+       document.getElementById('SliderAlarm').value = obj.MoistAlarmValue;
+       document.getElementById("SliderAlarmTextVal").innerHTML  = obj.MoistAlarmValue;  // Show value
+    }     
+  
 
 };
 

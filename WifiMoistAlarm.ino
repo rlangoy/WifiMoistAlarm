@@ -107,8 +107,6 @@ int smoothedADC()
        m_adcIndex=0;
        m_adcIntVal=0;
      }
-
-     
       return m_adcCurVal;
 }
 
@@ -229,6 +227,8 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   Serial.println("handleFileRead: " + path);
   
   if (path.endsWith("/")) path += "index.html";          // If a folder is requested, send the index file
+
+  
   String contentType = getContentType(path);             // Get the MIME type
   String pathWithGz = path + ".gz";
   if (SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)) { // If the file exists, either as a compressed archive, or normal
@@ -238,6 +238,7 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     size_t sent = server.streamFile(file, contentType);    // Send it to the client
     file.close();                                          // Close the file again
     Serial.println(String("\tSent file: ") + path);
+
     return true;
   }
   Serial.println(String("\tFile Not Found: ") + path);   // If the file doesn't exist, return false
@@ -300,10 +301,18 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
       } else if (payload[0] == 'N') {                      // the browser sends an N when the rainbow effect is disabled
         rainbow = false;
         }
-        else if (payload[0] == 'M') {                      // the browser sends an N when the rainbow effect is disabled
+        else if (payload[0] == 'M') {                      // the browser sends an M when moisture alarm value is changed
            m_moistVal = (uint32_t) strtol((const char *) &payload[1], NULL, 10);   // moisturevalue; }
            //Serial.printf("New moist: %d\n", m_moistVal);
+           String JSONmessage = "{\"MoistAlarmValue\":\"" + String(m_moistVal)+"\"}";
+            webSocket.broadcastTXT(JSONmessage);    // send message to all connected web-sockets
         }
+        else if (payload[0] == 'I') {                      // the browser sends an M when moisture alarm value is changed
+              //Update GUI
+             String JSONmessage = "{\"MoistAlarmValue\":\"" + String(m_moistVal)+"\"}";
+             webSocket.broadcastTXT(JSONmessage);    // send message to all connected web-sockets
+        }
+
       break;
   }
 }
