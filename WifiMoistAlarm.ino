@@ -309,8 +309,17 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         }
         else if (payload[0] == 'I') {                      // the browser sends an M when moisture alarm value is changed
               //Update GUI
+
+                   //The message is sent in JSON format :  '{"MoistAlarmValue":"11","A0":"0"}'    obj-A0 and value 
+    
+             //String JSONmessage = "{\"MoistAlarmValue\":\"" + String(m_moistVal)+"\,"+"\"A0\":\"" + String(analogRead(A0))+"\"}";
+             
              String JSONmessage = "{\"MoistAlarmValue\":\"" + String(m_moistVal)+"\"}";
              webSocket.broadcastTXT(JSONmessage);    // send message to all connected web-sockets
+             
+             JSONmessage = "{\"A0\":\"" + String(m_oldAd0)+"\"}";
+             webSocket.broadcastTXT(JSONmessage);    // send message to all connected web-sockets
+
         }
 
       break;
