@@ -2,6 +2,24 @@
 ESP8266 Ardunio Plant Moisture alarm
 
 
+
+Setup:
+  Connect to:
+   network:    WifiMoistAlarm
+   password:   123456789
+
+
+Usage:
+Open web-browser address: http://192.168.4.1  
+
+Advanced config
+  Connect it to router:
+		Open web-browser address: http://192.168.4.1/config 
+		    <enter data..>
+
+		The connected network address could be found using the USB/serial interface
+
+
 Dependencies:
 	ESP8266 board 
 	SPIFFS
