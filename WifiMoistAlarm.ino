@@ -47,6 +47,27 @@ const char *OTAPassword = "esp8266";
 const char* mdnsName = "MoistAlarm"; // Domain name for the mDNS responder
 
 uint8_t socketNumber;
+int m_rgb=0;
+
+void write2RGB(long rgb)
+{
+        int r = ((rgb >> 20) & 0x3FF);                     // 10 bits per color, so R: bits 20-29
+        int g = ((rgb >> 10) & 0x3FF);                     // G: bits 10-19
+        int b =          rgb & 0x3FF;                      // B: bits  0-9
+
+        analogWrite(LED_RED,   1024-r);                         // write it to the LED output pins
+        analogWrite(LED_GREEN, 1024-g);
+        analogWrite(LED_BLUE,  1024-b);
+}
+
+
+void enableRGB(bool enable)
+{
+  if(enable)
+    digitalWrite(LED_GND, HIGH);   // Turn Enable LED on of strength  
+  else
+    digitalWrite(LED_GND, LOW);   // Turn Enable LED Off of strength  
+}
 
 
 /*__________________________________________________________SETUP__________________________________________________________*/
@@ -62,6 +83,8 @@ void setup() {
   digitalWrite(LED_GND, HIGH);   // Turn Enable LED on of strength
   digitalWrite(LED_ONB, HIGH);    // Turn off internal LED
 
+  write2RGB(0x0000ff);  // set clr
+  enableRGB(true);      // enable led
 
   Serial.begin(115200);        // Start the Serial communication to send messages to the computer
   delay(10);
@@ -128,9 +151,15 @@ void loop() {
 void chkMoistAlarm(int chkVal)
 {
    if(chkVal> m_moistVal)
+   {
      digitalWrite(LED_ONB, LOW);    // Turn off internal LED
+     enableRGB(true);
+   }
    else
+   {
      digitalWrite(LED_ONB, HIGH);    // Turn off internal LED
+     enableRGB(false);
+   }
 }
 
 void setSliderValue(int val)
@@ -289,6 +318,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
       //Serial.printf("[%u] get Text: %s\n", num, payload);
       if (payload[0] == '#') {            // we get RGB data
         uint32_t rgb = (uint32_t) strtol((const char *) &payload[1], NULL, 16);   // decode rgb data
+        m_rgb=rgb;
         int r = ((rgb >> 20) & 0x3FF);                     // 10 bits per color, so R: bits 20-29
         int g = ((rgb >> 10) & 0x3FF);                     // G: bits 10-19
         int b =          rgb & 0x3FF;                      // B: bits  0-9
